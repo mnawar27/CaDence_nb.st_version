@@ -23,13 +23,16 @@ st.markdown("""
 <style>
 
 [data-testid="block-container"] {
+    background-color:red;
     padding-left: 2rem;
     padding-right: 2rem;
     padding-top: 1rem;
     padding-bottom: 0rem;
     margin-bottom: -7rem;
 }
-
+[data-testid="stSidebarUserContent"]{
+    background-color: #181fd0;
+    }
 [data-testid="stVerticalBlock"] {
     padding-left: 0rem;
     padding-right: 0rem;
@@ -163,17 +166,17 @@ def most_used_platform(df_selected_week):
 
 ####### Gender
 def get_gender(df_selected_week):
-  gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
-  label_tz = ", ".join(df_selected_week['time_zone'].unique())
-  label_wk = ", ".join(df_selected_week['week'].unique())
-  ###### Vertical bar graph
-  fig, ax = plt.subplots(figsize=(8, 6))
-  gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
-  ax.set_xlabel("Gender")
-  ax.set_ylabel("Counts")
-  ax.set_title(f"Gender Counts in {label_tz} during {label_wk}")
-  ax.grid(axis='x', linestyle='--', alpha=0.7)
-  return fig
+    gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
+    label_tz = ", ".join(df_selected_week['time_zone'].unique())
+    label_wk = ", ".join(df_selected_week['week'].unique())
+###### Vertical bar graph
+    fig, ax = plt.subplots(figsize=(8, 6))
+    gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
+    ax.set_xlabel("Gender")
+    ax.set_ylabel("Counts")
+    ax.set_title(f"Gender Counts in {label_tz} during {label_wk}")
+    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    return fig
 
 
 
@@ -182,25 +185,39 @@ def get_gender(df_selected_week):
 
 ####### Song
 def most_played(df_selected_week):
-  mps=df_selected_week['song'].value_counts().nlargest(10).reset_index()
-  mps.columns = ['Song', 'Plays']  
-  mps['Rank'] = mps.index + 1  
-  mps = mps[['Rank', 'Song', 'Plays']]
-  return mps
+    mps=df_selected_week['song'].value_counts().nlargest(10).reset_index()
+    mps.columns = ['Song', 'Plays']  
+    mps['Rank'] = mps.index + 1  
+    mps = mps[['Rank', 'Song', 'Plays']]
+    return mps
 
 ####### Duration
 
-
+def hours_listened(df_selected_week):
+    odur=df_selected_week.groupby('state')['duration'].sum()/60
+    odur=odur.round().sort_values(ascending=False)
+    odur=odur.reset_index(drop=False)
+    odur_final=odur.drop(odur[odur['duration'] == 0].index)
+### Finding middle section to highlight
+    index_third=odur.iloc[0,1]//3
+    topnum=odur.iloc[0,1]-index_third
+    bottomnum=odur_final.iloc[-1,1]+index_third
+    y_av=np.mean(odur_final['duration'])
+    odur_final.plot.bar('state','duration')
+    plt.axhspan(topnum, bottomnum, color='red', alpha=0.2)
+    # plt.title(f"Duration in Hours per User in {df_selected_tz.iloc[1,12]} in {selected_week}")
+    plt.axhline(y=y_av, color='r', linestyle='--', label='Average')
+    st.pyplot(plt)
 
 ####### Artist
 def most_played_artist(df_selected_week):
-  mpa=df_selected_week['artist'].value_counts()
+    mpa=df_selected_week['artist'].value_counts()
 # WordCloud 
-  wc = WordCloud(background_color='white', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
-  plt.figure(figsize=(10, 7))
-  plt.imshow(wc, interpolation='bilinear')
-  plt.axis("off")
-  st.pyplot(plt)
+    wc = WordCloud(background_color='white', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
+    plt.figure(figsize=(10, 7))
+    plt.imshow(wc, interpolation='bilinear')
+    plt.axis("off")
+    st.pyplot(plt)
 
 
 
@@ -257,7 +274,10 @@ with col[2]:
 
 ####DURATION
     st.markdown('#### Hours Listening')
-   
+    hours_listened = hours_listened(df_selected_week)
+
+    if hours_listened is not None:
+        st.table(hours_listened)
 
 ####TOP ARTISTS
     st.markdown('#### Top Artists')
