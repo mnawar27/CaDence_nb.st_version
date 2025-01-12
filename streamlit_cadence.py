@@ -2,10 +2,16 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import plotly.express as px
+import matplotlib.pyplot as plt
+import wordcloud
+from wordcloud import WordCloud
+import numpy as np
+
 
 #######################  Page Config
 st.set_page_config(
-    page_title="ZipSpontify User Demographic Analytics over 12 Weeks",
+    page_title="CaDence",
+    page_icon= "🎶",
     layout="wide",
     initial_sidebar_state="expanded")
 
@@ -119,15 +125,28 @@ with st.sidebar:
 
 #######################
 # Plots
-######## Gender
 
-####### State User Counts
+#1st Column - Plan level and Device Type
 
-####### Artist
+######## Plan Level
 
-####### Song
+def paid_level(df_selected_week):
+    paidlev = df_selected_week.groupby('userId')['level'].first().value_counts()
 
-####### Platform
+    #Titles
+    label_tz = ", ".join(df_selected_week['time_zone'].unique())
+    label_wk = ", ".join(df_selected_week['week'].unique())
+
+    ## Horizontal bar chart. 
+    fig, ax = plt.subplots(figsize=(8, 6))
+    paidlev.plot(kind='barh', stacked=True, color=['#2ca02c', '#d62728'], ax=ax)
+    ax.set_xlabel("Count")
+    ax.set_ylabel("Level")
+    ax.set_title(f"Paid vs Free Accounts in {label_tz} during {label_wk}") #here we need to adjust the labels to do not show all the weeks
+    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    return fig
+
+####### Devices
 
 def most_used_platform(df_selected_week):
     platform=df_selected_week.groupby('userId')['userAgent'].first().value_counts()
@@ -137,22 +156,120 @@ def most_used_platform(df_selected_week):
     # fig.update_layout(title_text=f"Most Used Platforms in {df_selected_tz.iloc[1,12]} in {selected_week}")
     return fig
 
-####### Level
+#2nd Column - - User Map, Gender and Summary Table
+
+####### State user Counts (Maisha and Sharmin)
+#INSERT CODE
+
+####### Gender
+def get_gender(df_selected_week):
+  gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
+  label_tz = ", ".join(df_selected_week['time_zone'].unique())
+  label_wk = ", ".join(df_selected_week['week'].unique())
+  ###### Vertical bar graph
+  fig, ax = plt.subplots(figsize=(8, 6))
+  gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
+  ax.set_xlabel("Gender")
+  ax.set_ylabel("Counts")
+  ax.set_title(f"Gender Counts in {label_tz} during {label_wk}")
+  ax.grid(axis='x', linestyle='--', alpha=0.7)
+  return fig
+
+
+
+
+#3rd Column -  Top 10 Songs, Duration and Artists
+
+####### Song
+def most_played(df_selected_week):
+  mps=df_selected_week['song'].value_counts().nlargest(10).reset_index()
+  mps.columns = ['Song', 'Plays']  
+  mps['Rank'] = mps.index + 1  
+  mps = mps[['Rank', 'Song', 'Plays']]
+  return mps
 
 ####### Duration
 
+
+
+####### Artist
+def most_played_artist(df_selected_week):
+  mpa=df_selected_week['artist'].value_counts()
+# WordCloud 
+  wc = WordCloud(background_color='white', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
+  plt.figure(figsize=(10, 7))
+  plt.imshow(wc, interpolation='bilinear')
+  plt.axis("off")
+  st.pyplot(plt)
+
+
+
 #######################
 # Dashboard Main Panel
+#######################
+col = st.columns((1, 5, 2), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
+
+#1st Column - Plan level and Device Type
+with col[0]:
+
+####PLAN LEVEL
+
+    st.markdown('#### Account Levels')
+    level_chart = paid_level(df_selected_week)
+
+    if level_chart:
+        st.pyplot(level_chart, use_container_width=True)
 
 
-st.markdown('#### Platforms')
-donut = most_used_platform(df_selected_week)
-st.plotly_chart(donut, use_container_width=True)
+####DEVICES
+
+    st.markdown('#### Platforms')
+    donut = most_used_platform(df_selected_week)
+    st.plotly_chart(donut, use_container_width=True)
+
+#2nd Column - User Map, Gender and Summary Table
+
+with col[1]:
+
+####USER MAP
+
+####GENDER
+    st.markdown('#### Gender Distribution')
+    gender_chart = get_gender(df_selected_week)
+
+    if gender_chart:
+        st.pyplot(gender_chart, use_container_width=True)
+
+####SUMMARY TABLE
+
+
+
+    
+#3rd Column - Top 10 Songs, Duration and Artists
+with col[2]:
+
+####TOP SONGS
+    st.markdown('#### Most Played Songs (Top 10)')
+    most_played_songs = most_played(df_selected_week)
+
+    if most_played_songs is not None:
+        st.table(most_played_songs.reset_index(drop=True))
+
+####DURATION
+    st.markdown('#### Hours Listening')
+   
+
+####TOP ARTISTS
+    st.markdown('#### Top Artists')
+    wordcloud_chart = most_played_artist(df_selected_week)
+    if wordcloud_chart:
+        st.pyplot(plt)
     
     
-with st.expander('About', expanded=True):
-    st.write('''
-            - Data: [U.S. Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-total.html).
-            - :orange[**Gains/Losses**]: states with high inbound/ outbound migration for selected year
-            - :orange[**States Migration**]: percentage of states with annual inbound/ outbound migration > 50,000
-            ''')
+    
+#  with st.expander('About', expanded=True):
+#     st.write('''
+#             - Data: [U.S. Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-total.html).
+#             - :orange[**Gains/Losses**]: states with high inbound/ outbound migration for selected year
+#             - :orange[**States Migration**]: percentage of states with annual inbound/ outbound migration > 50,000
+#             ''')
