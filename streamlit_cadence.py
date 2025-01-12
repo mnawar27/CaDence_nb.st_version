@@ -75,26 +75,39 @@ hst_df = pd.read_json('data/hst_df.json', lines=True)
 # Sidebar
 
 with st.sidebar:
-    st.header('Time Zone')
+    st.header('Time Zone and Week Controls')
+    ##### Defaults Below
+    present=['Present']
+    allPlaces=['EST','CST','MST','PST','HST']
+    ###### Button Select
     sb_tz = st.multiselect("Select one or more options:",
-        ['EST','CST','MST','PST','HST'], key='option')
+        ['EST','CST','MST','PST','HST'], key='time zone')
     
-    all_options = st.button("Select all options")
-    
+    all_options = st.button("Select all Time Zones")
     if all_options:
-        sb_tz = ['EST','CST','MST','PST','HST']
+        sb_tz = allPlaces
 
     st.header('Week')
-    sb_wk = st.multiselect("Week",['Week 1','Week 2', 'Week 3','Week 4','Week 5'], key='option_2')
-    sb_wk = sb_wk.append('Present')
+    sb_wk = st.multiselect("Choose a Week",['Present','Week 1','Week 2', 'Week 3','Week 4','Week 5'], key='option_2')
+    
     all_options_w = st.button("Select all Weeks")
-
     if all_options_w:
         sb_wk = ['Week 1', 'Week 2', 'Week 3','Week 4','Week 5','Present']
     
 ################ Begin DF corelation to feed into Dashboard
     df_seled_wk =pd.DataFrame(columns=['artist', 'song','duration','ts','sessionId','level','state','userAgent','userId','firstName','gender','week','time_zone'])
-
+#### Have 'present as default
+    if sb_wk==[]:
+        sb_wk=present
+    else:
+        sb_wk=sb_wk
+#### If no tz, then all tz to avoid errors before selections are made.
+    if sb_tz==[]:
+        sb_tz=allPlaces
+###### If selections are made, go with the selections
+    else:
+        sb_tz=sb_tz
+#### Now that there's a df with the right tz, narrow down to the ones with the right weeks we want    
     for i in sb_tz:
         select_tz= omega_raw.loc[omega_raw['time_zone'] == i]
         df_seled_wk=pd.concat([df_seled_wk,select_tz])
