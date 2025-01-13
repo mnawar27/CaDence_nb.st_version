@@ -120,17 +120,24 @@ def most_used_platform(df_selected_week):
 ####### State user Counts (Maisha and Sharmin)
 #INSERT CODE
 
-def get_state_count(df_selected_week):
-    state_count = df_selected_week.groupby('state')['userId'].nunique()
-    state_count_final = state_count.sort_values(ascending=False).nlargest(5)
-    ####### You can change the graphic code here. If you want more than the top five,
-    ####### Change the number in nlargest
-    ax = state_count_final.plot(kind='bar', stacked=True)
-    ax.set_xlabel("States")
-    ax.set_ylabel("Count")
-    # ax.set_title(f"Top States with Highest Number of Users in {df_selected_tz.iloc[1,12]} in {selected_week}")
-    plt.legend(title="Count")
-    st.pyplot(plt)
+def get_state_count(omega_raw, time_zone='All', week='All'):
+    df = omega_raw.copy()
+    if time_zone != 'All': df = df[df['time_zone'] == time_zone]
+    if week != 'All': df = df[df['week'] == week]
+
+    groupby_cols = ['state', 'time_zone'] if week == 'All' else ['state', 'time_zone', 'week']
+    state_count = df.groupby(groupby_cols)['userId'].nunique().reset_index()
+
+    state_count.columns = ['State', 'Time Zone', 'User Count'] if week == 'All' else ['State', 'Time Zone', 'Week', 'User Count']
+    hover_data = {'User Count': True, 'Time Zone': True, 'Week': True} if week != 'All' else {'User Count': True, 'Time Zone': True}
+
+    # Create plot
+    fig = px.choropleth(state_count, locations='State', locationmode='USA-states', color='User Count',
+                        hover_name='State', hover_data=hover_data, color_continuous_scale="Blues",
+                        title=f"User Distribution: {time_zone if time_zone != 'All' else 'All Time Zones'} | {week if week != 'All' else 'All Weeks'}")
+
+    fig.update_geos(visible=True, showcoastlines=True, coastlinecolor="Black", showland=True, landcolor="lightgray", projection_type="albers usa",bgcolor='black')
+    return fig
 
 ####### Gender
 def get_gender(df_selected_week):

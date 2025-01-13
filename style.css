@@ -14,7 +14,8 @@
     background-attachment: local;
     }
 [data-testid="stHeader"] {
-    background: #04042c;
+    /* background: #04042c; */
+    background-color: black;
     }
 
 
@@ -64,7 +65,8 @@ html, body, [class*="css"]{
 } */
 
 [data-testid="stElementContainer"]{
-    background-color:rgb(17, 14, 18);
+    /* background-color:rgb(17, 14, 18); */
+    background-color:black;
     border-radius:15px;
     margin:auto;
     text-align: center;
