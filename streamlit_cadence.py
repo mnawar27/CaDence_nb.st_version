@@ -93,7 +93,7 @@ def paid_level(df_selected_week):
 
     ## Horizontal bar chart. 
     fig, ax = plt.subplots(figsize=(8, 6))
-    paidlev.plot(kind='barh', stacked=True, color=['#2ca02c', '#d62728'], ax=ax)
+    paidlev.plot(kind='barh', stacked=True, color=['#dc14c5', '#7f43ac'], ax=ax)
     ax.set_xlabel("Count")
     ax.set_ylabel("Level")
     ax.set_title(f"Paid vs Free Accounts in {label_tz} during {label_wk}") #here we need to adjust the labels to do not show all the weeks
@@ -153,7 +153,7 @@ def get_gender(df_selected_week):
 
 ####### Song
 def most_played(df_selected_week):
-    mps=df_selected_week['song'].value_counts().nlargest(10).reset_index()
+    mps=df_selected_week['song'].value_counts().nlargest(5).reset_index()
     mps.columns = ['Song', 'Plays']  
     mps['Rank'] = mps.index + 1  
     mps = mps[['Rank', 'Song', 'Plays']]
@@ -181,7 +181,7 @@ def hours_listened(df_selected_week):
 def most_played_artist(df_selected_week):
     mpa=df_selected_week['artist'].value_counts()
 # WordCloud 
-    wc = WordCloud(background_color='white', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
+    wc = WordCloud(background_color='black', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
     plt.figure(figsize=(10, 7))
     plt.imshow(wc, interpolation='bilinear')
     plt.axis("off")
@@ -196,7 +196,7 @@ col = st.columns((2.5, 5, 2.5), gap='medium') #Divide the dashboard into 3 colum
 
 #1st Column - Plan level and Device Type
 with col[0]:
-    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/logonobglittle.png")
+    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/Media/logonobglittle.png")
 ####PLAN LEVEL
 
     st.markdown('#### Account Levels')
@@ -238,7 +238,7 @@ with col[1]:
 with col[2]:
 
 ####TOP SONGS
-    st.markdown('#### Most Played Songs (Top 10)')
+    st.markdown('#### Most Played Songs (Top 5)')
     most_played_songs = most_played(df_selected_week)
 
     if most_played_songs is not None:

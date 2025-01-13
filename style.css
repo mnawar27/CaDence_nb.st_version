@@ -2,7 +2,6 @@
 
 .anta-regular {
     font-family: "Anta", serif;
-    font-weight: 400;
     font-style: normal;
 }
 
@@ -22,40 +21,36 @@
 html, body, [class*="css"]{
     font-family: 'Anta', serif;
 }
-h1{
-    font-family: 'Anta', serif !important;
-    color:#181fd0;
-}
+
 /* Markdown */
 .stMarkdown {
     text-align: center;
     font-size: 60px;
     font-family: "Anta", serif;
     color:white;
-    text-shadow: 5px 6px 20px rgb(48, 20, 58),-3px 4px 20px white;
+    text-shadow: 5px 6px 20px rgb(96, 31, 120),-3px 4px 20px white;
 }
 
-.blaster{
-    font-family: 'anta' serif;
-    font-size:20px;
-}
 /* Images */
 [data-testid="stImage"] {
     margin:auto;
-    margin-left:10px;
-    padding-left:120px;
-    
 }
-
+[data-testid="stImageContainer"]{
+    /* background-color: aqua; */
+    margin:auto;
+    padding: 5px 5px 5px 5px;
+    border-radius:15px;
+    border:3px dotted rgb(251, 251, 251,.5);
+}
 /* #### Run header */
-[data-testid="block-container"] {
-    background-color:#04042c;
+/* [data-testid="block-container"] {
+    /* background-color:red;
     padding-left: 1rem;
     padding-right: 1rem;
     padding-top: 1rem;
     padding-bottom: 0rem;
-    margin-bottom: -8rem;
-}
+    margin-bottom: -8rem; */
+
 [data-testid="stSidebarUserContent"]{
     background: #04042c;
     }
@@ -64,27 +59,40 @@ h1{
     background: #04042c;
     width: 100px;
 }
-[data-testid="stVerticalBlock"] {
-    font-family: 'Anta', serif;
-    padding-left: 0rem;
-    padding-right: 0rem;
+/* [data-testid="stVerticalBlock"] {
+    background-color: red;
+} */
+
+[data-testid="stElementContainer"]{
+    background-color:rgb(17, 14, 18);
+    border-radius:15px;
+    margin:auto;
+    text-align: center;
 }
-[data-testid="stMarkdown"] {
+th, td {
+    border:10px solid rgb(171, 48, 48);
+}
+[data-testid="stMarkdownContainer"]{
+    
+    text-align: center;
+    margin:auto;
+}
+/* [data-testid="stMarkdown"] {
     font-family:'Anta', serif;
-}
-[data-testid="stMetric"] {
+} */
+/* [data-testid="stMetric"] {
     background-color: #393939;
     text-align: center;
     padding: 15px 0;
-}
+} */
 
-[data-testid="stMetricLabel"] {
+/* [data-testid="stMetricLabel"] {
     display: flex;
     justify-content: center;
     align-items: center;
-}
+} */
 
-[data-testid="stMetricDeltaIcon-Up"] {
+/* [data-testid="stMetricDeltaIcon-Up"] {
     position: relative;
     left: 38%;
     -webkit-transform: translateX(-50%);
@@ -98,4 +106,4 @@ h1{
     -webkit-transform: translateX(-50%);
     -ms-transform: translateX(-50%);
     transform: translateX(-50%);
-}
+} */
