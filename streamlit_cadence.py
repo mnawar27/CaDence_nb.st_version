@@ -7,7 +7,7 @@ import wordcloud
 from wordcloud import WordCloud
 import numpy as np
 
-
+plt.style.use('dark_background')
 #######################  Page Config
 st.set_page_config(
     page_title="CaDence",
@@ -15,59 +15,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded")
 
-alt.themes.enable("dark")
+# alt.themes.enable("dark")
+with open('style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-#######################
-# CSS styling
-st.markdown("""
-<style>
-
-[data-testid="block-container"] {
-    background-color:red;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    padding-top: 1rem;
-    padding-bottom: 0rem;
-    margin-bottom: -7rem;
-}
-[data-testid="stSidebarUserContent"]{
-    background-color: #181fd0;
-    }
-[data-testid="stVerticalBlock"] {
-    padding-left: 0rem;
-    padding-right: 0rem;
-}
-
-[data-testid="stMetric"] {
-    background-color: #393939;
-    text-align: center;
-    padding: 15px 0;
-}
-
-[data-testid="stMetricLabel"] {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-[data-testid="stMetricDeltaIcon-Up"] {
-    position: relative;
-    left: 38%;
-    -webkit-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    transform: translateX(-50%);
-}
-
-[data-testid="stMetricDeltaIcon-Down"] {
-    position: relative;
-    left: 38%;
-    -webkit-transform: translateX(-50%);
-    -ms-transform: translateX(-50%);
-    transform: translateX(-50%);
-}
-
-</style>
-""", unsafe_allow_html=True)
 
 
 #######################
@@ -154,7 +105,12 @@ def paid_level(df_selected_week):
 def most_used_platform(df_selected_week):
     platform=df_selected_week.groupby('userId')['userAgent'].first().value_counts()
     ##Donut Chart
-    fig = px.pie(platform, names=platform.index, values=platform, hole=.6)
+    fig = px.pie(platform, names=platform.index, values=platform, hole=.6,color='count',
+                color_discrete_map={'Windows':'#dc14c5',
+                                    'Mac':'#d84f9e',
+                                    'Linux':'#7f43ac',
+                                    'iPhone':'#3c34bc',
+                                    'iPad':'#1eb75c'})
     fig.update_traces(textinfo='percent+label')
     # fig.update_layout(title_text=f"Most Used Platforms in {df_selected_tz.iloc[1,12]} in {selected_week}")
     return fig
@@ -164,13 +120,25 @@ def most_used_platform(df_selected_week):
 ####### State user Counts (Maisha and Sharmin)
 #INSERT CODE
 
+def get_state_count(df_selected_week):
+    state_count = df_selected_week.groupby('state')['userId'].nunique()
+    state_count_final = state_count.sort_values(ascending=False).nlargest(5)
+    ####### You can change the graphic code here. If you want more than the top five,
+    ####### Change the number in nlargest
+    ax = state_count_final.plot(kind='bar', stacked=True)
+    ax.set_xlabel("States")
+    ax.set_ylabel("Count")
+    # ax.set_title(f"Top States with Highest Number of Users in {df_selected_tz.iloc[1,12]} in {selected_week}")
+    plt.legend(title="Count")
+    st.pyplot(plt)
+
 ####### Gender
 def get_gender(df_selected_week):
     gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
     label_tz = ", ".join(df_selected_week['time_zone'].unique())
     label_wk = ", ".join(df_selected_week['week'].unique())
 ###### Vertical bar graph
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(4, 6))
     gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
     ax.set_xlabel("Gender")
     ax.set_ylabel("Counts")
@@ -224,11 +192,11 @@ def most_played_artist(df_selected_week):
 #######################
 # Dashboard Main Panel
 #######################
-col = st.columns((1, 5, 2), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
+col = st.columns((2.5, 5, 2.5), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
 
 #1st Column - Plan level and Device Type
 with col[0]:
-
+    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/logonobglittle.png")
 ####PLAN LEVEL
 
     st.markdown('#### Account Levels')
@@ -240,7 +208,7 @@ with col[0]:
 
 ####DEVICES
 
-    st.markdown('#### Platforms')
+    st.markdown('## Platforms')
     donut = most_used_platform(df_selected_week)
     st.plotly_chart(donut, use_container_width=True)
 
@@ -249,13 +217,17 @@ with col[0]:
 with col[1]:
 
 ####USER MAP
+    st.markdown('### User Count per State')
+    get_state_count = get_state_count(df_selected_week)
 
+    if get_state_count:
+        st.plotly_chart(get_state_count, use_container_width=True)
 ####GENDER
-    st.markdown('#### Gender Distribution')
+    st.markdown('### Gender Distribution')
     gender_chart = get_gender(df_selected_week)
 
     if gender_chart:
-        st.pyplot(gender_chart, use_container_width=True)
+        st.pyplot(gender_chart)
 
 ####SUMMARY TABLE
 
@@ -270,7 +242,8 @@ with col[2]:
     most_played_songs = most_played(df_selected_week)
 
     if most_played_songs is not None:
-        st.table(most_played_songs.reset_index(drop=True))
+        st.markdown(most_played_songs.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+        # st.table(most_played_songs.reset_index(drop=True))
 
 ####DURATION
     st.markdown('#### Hours Listening')
