@@ -93,9 +93,9 @@ def paid_level(df_selected_week):
 
     ## Horizontal bar chart. 
     fig, ax = plt.subplots(figsize=(8, 6))
-    paidlev.plot(kind='barh', stacked=True, color=['#dc14c5', '#7f43ac'], ax=ax)
-    ax.set_xlabel("Count")
-    ax.set_ylabel("Level")
+    paidlev.plot(kind='bar', stacked=True, color=['#dc14c5', '#7f43ac'], ax=ax)
+    ax.set_xlabel("Level")
+    ax.set_ylabel("Count")
     ax.set_title(f"Paid vs Free Accounts in {label_tz} during {label_wk}") #here we need to adjust the labels to do not show all the weeks
     ax.grid(axis='x', linestyle='--', alpha=0.7)
     return fig
@@ -118,7 +118,7 @@ def most_used_platform(df_selected_week):
 #2nd Column - - User Map, Gender and Summary Table
 
 ####### State user Counts (Maisha and Sharmin)
-#INSERT CODE
+######## MAISHA
 
 def get_state_count(omega_raw, time_zone='All', week='All'):
     df = omega_raw.copy()
@@ -140,18 +140,42 @@ def get_state_count(omega_raw, time_zone='All', week='All'):
     return fig
 
 ####### Gender
-def get_gender(df_selected_week):
-    gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
-    label_tz = ", ".join(df_selected_week['time_zone'].unique())
-    label_wk = ", ".join(df_selected_week['week'].unique())
-###### Vertical bar graph
-    fig, ax = plt.subplots(figsize=(4, 6))
-    gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
-    ax.set_xlabel("Gender")
-    ax.set_ylabel("Counts")
-    ax.set_title(f"Gender Counts in {label_tz} during {label_wk}")
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
-    return fig
+####### SHARMIN #######
+def get_gender_shaded_horizontal(df_selected_week):
+    # Get the gender count (adjust for correct column names)
+    gender_counts = df_selected_week['gender'].value_counts()
+    # Replace 'M' with 'Male' and 'F' with 'Female' using map
+    gender_counts.index = gender_counts.index.map({'M': 'Male', 'F': 'Female'})
+    # Create a horizontal bar chart
+    fig, ax = plt.subplots(figsize=(6, 3))
+    # Shaded colors: Medium turquoise for Male, plum for Female
+    colors = ['mediumturquoise', 'plum']  # Adjust the color scheme for Male and Female
+    bars = ax.barh(gender_counts.index, gender_counts.values, color=colors, height=0.4)
+    # Add percentage labels with dynamic positioning
+    total_count = gender_counts.sum()
+    for bar in bars:
+        # Get the width of the bar (since it's horizontal, width is along x-axis)
+        width = bar.get_width()
+        percentage = (width / total_count) * 100
+        # Position the text based on the percentage
+        if percentage > 50:  # For high percentages, place inside the bar
+            ax.text(width / 2, bar.get_y() + bar.get_height() / 2,
+                    f'{percentage:.1f}%', ha='center', va='center',
+                    fontsize=12, color='darkgreen', fontweight='bold')
+        else:  # For low percentages, place outside the bar
+            ax.text(width + 5, bar.get_y() + bar.get_height() / 2,
+                    f'{percentage:.1f}%', ha='left', va='center',
+                    fontsize=12, color='brown', fontweight='bold')
+    # Add a title and labels
+    ax.set_xlabel("Count", fontsize=14, fontweight='bold')
+    ax.set_ylabel("Gender", fontsize=14, fontweight='bold')
+    ax.set_title(f"Gender Distribution in {df_selected_tz.iloc[1, 12]} for {selected_week}", fontsize=16, fontweight='bold')
+    # Add gridlines for style
+    ax.set_facecolor('ghostwhite')
+    ax.grid(True, axis='x', linestyle='--', alpha=0.6)
+    # Display the plot
+    plt.tight_layout()
+    return plt
 
 
 
@@ -199,7 +223,7 @@ def most_played_artist(df_selected_week):
 #######################
 # Dashboard Main Panel
 #######################
-col = st.columns((2.5, 5, 2.5), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
+col = st.columns((2, 5, 3), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
 
 #1st Column - Plan level and Device Type
 with col[0]:
@@ -229,12 +253,17 @@ with col[1]:
 
     if get_state_count:
         st.plotly_chart(get_state_count, use_container_width=True)
-####GENDER
-    st.markdown('### Gender Distribution')
-    gender_chart = get_gender(df_selected_week)
+####WORD COUNT
 
-    if gender_chart:
-        st.pyplot(gender_chart)
+    st.markdown('#### Top Artists')
+    wordcloud_chart = most_played_artist(df_selected_week)
+    if wordcloud_chart:
+        st.pyplot(plt)
+    # st.markdown('### Gender Distribution')
+    # gender_chart = get_gender(df_selected_week)
+
+    # if gender_chart:
+    #     st.pyplot(gender_chart)
 
 ####SUMMARY TABLE
 
@@ -259,12 +288,12 @@ with col[2]:
     if hours_listened is not None:
         st.table(hours_listened)
 
-####TOP ARTISTS
-    st.markdown('#### Top Artists')
-    wordcloud_chart = most_played_artist(df_selected_week)
-    if wordcloud_chart:
-        st.pyplot(plt)
-    
+####GENDER
+## (Broken, Commented out for now )
+    # get_gen=get_gender_shaded_horizontal(df_selected_week)
+
+    # if get_gen is not None:
+    #     st.table(get_gen)
     
     
 #  with st.expander('About', expanded=True):
