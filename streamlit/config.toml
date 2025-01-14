@@ -1,4 +1,4 @@
 [theme]
 base="dark"
-backgroundColor="#071635"
-font='Anta' serif
+primaryColor="#714bff"
+font="monospace"
