@@ -35,6 +35,7 @@ hst_df = pd.read_json('data/hst_df.json', lines=True)
 # Sidebar
 
 with st.sidebar:
+    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/Media/logonobglittle.png")
     st.header('Time Zone and Week Controls')
     ##### Defaults Below
     present=['Present']
@@ -82,43 +83,44 @@ with st.sidebar:
 
 #1st Column - Plan level and Device Type
 
-######## Plan Level
+######## Plan Level GABI
 
 def paid_level(df_selected_week):
     paidlev = df_selected_week.groupby('userId')['level'].first().value_counts()
+    paidlev=paidlev.reset_index(drop=False)
 
     #Titles
     label_tz = ", ".join(df_selected_week['time_zone'].unique())
     label_wk = ", ".join(df_selected_week['week'].unique())
 
-    ## Horizontal bar chart. 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    paidlev.plot(kind='barh', stacked=True, color=['#dc14c5', '#7f43ac'], ax=ax)
-    ax.set_xlabel("Count")
-    ax.set_ylabel("Level")
-    ax.set_title(f"Paid vs Free Accounts in {label_tz} during {label_wk}") #here we need to adjust the labels to do not show all the weeks
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    ## Horizontal bar chart.  
+    fig, ax = plt.subplots(figsize=(4, 8))
+    paidlev.plot(kind='bar',stacked=True,color=['#dc14c5', '#20b85f'], ax=ax)
+    ax.set_title("Paid vs Free Accounts",fontsize=30)
+    ax.set_xticklabels(paidlev['level'], rotation=0, ha='right')
+    y=paidlev['count'].nlargest(1)
+    ax.set_yticks(np.arange(0, max(y) + 10, 10))
     return fig
 
-####### Devices
+####### Devices  GABI
 
 def most_used_platform(df_selected_week):
     platform=df_selected_week.groupby('userId')['userAgent'].first().value_counts()
     ##Donut Chart
-    fig = px.pie(platform, names=platform.index, values=platform, hole=.6,color='count',
+    fig = px.pie(platform, names=platform.index,values=platform, hole=.6,color='count',
                 color_discrete_map={'Windows':'#dc14c5',
                                     'Mac':'#d84f9e',
                                     'Linux':'#7f43ac',
                                     'iPhone':'#3c34bc',
                                     'iPad':'#1eb75c'})
     fig.update_traces(textinfo='percent+label')
-    # fig.update_layout(title_text=f"Most Used Platforms in {df_selected_tz.iloc[1,12]} in {selected_week}")
+    fig.update_layout(showlegend=False, font_size=15, height=350,title=dict(text="Platforms Used", x=0.3,font=dict(size=20)))
     return fig
 
 #2nd Column - - User Map, Gender and Summary Table
 
 ####### State user Counts (Maisha and Sharmin)
-#INSERT CODE
+######## MAISHA
 
 def get_state_count(omega_raw, time_zone='All', week='All'):
     df = omega_raw.copy()
@@ -129,29 +131,58 @@ def get_state_count(omega_raw, time_zone='All', week='All'):
     state_count = df.groupby(groupby_cols)['userId'].nunique().reset_index()
 
     state_count.columns = ['State', 'Time Zone', 'User Count'] if week == 'All' else ['State', 'Time Zone', 'Week', 'User Count']
-    hover_data = {'User Count': True, 'Time Zone': True, 'Week': True} if week != 'All' else {'User Count': True, 'Time Zone': True}
+    # hover_data = {'User Count': True, 'Time Zone': True, 'Week': True} if week != 'All' else {'User Count': True, 'Time Zone': True}
 
     # Create plot
     fig = px.choropleth(state_count, locations='State', locationmode='USA-states', color='User Count',
-                        hover_name='State', hover_data=hover_data, color_continuous_scale="Blues",
-                        title=f"User Distribution: {time_zone if time_zone != 'All' else 'All Time Zones'} | {week if week != 'All' else 'All Weeks'}")
-
+                        hover_name='State', color_continuous_scale="plasma")
+    fig.update_layout(mapbox_zoom=9,
+    title={
+        'text': "Users Per State",
+        'x': 0.5,  # Set x position to the center
+        'xanchor': 'center',  # Anchor the title to the center
+        'font_size':25
+    })
     fig.update_geos(visible=True, showcoastlines=True, coastlinecolor="Black", showland=True, landcolor="lightgray", projection_type="albers usa",bgcolor='black')
     return fig
 
 ####### Gender
-def get_gender(df_selected_week):
-    gender_df = df_selected_week.groupby('userId')['gender'].first().value_counts()
-    label_tz = ", ".join(df_selected_week['time_zone'].unique())
-    label_wk = ", ".join(df_selected_week['week'].unique())
-###### Vertical bar graph
-    fig, ax = plt.subplots(figsize=(4, 6))
-    gender_df.plot(kind='bar', stacked=True, color=['#1f77b4', '#ff7f0e'], ax=ax)
-    ax.set_xlabel("Gender")
-    ax.set_ylabel("Counts")
-    ax.set_title(f"Gender Counts in {label_tz} during {label_wk}")
-    ax.grid(axis='x', linestyle='--', alpha=0.7)
-    return fig
+####### SHARMIN #######
+def get_gender_shaded_horizontal(df_selected_week):
+    # Get the gender count (adjust for correct column names)
+    gender_counts = df_selected_week['gender'].value_counts()
+    # Replace 'M' with 'Male' and 'F' with 'Female' using map
+    gender_counts.index = gender_counts.index.map({'M': 'Male', 'F': 'Female'})
+    # Create a horizontal bar chart
+    fig, ax = plt.subplots(figsize=(6, 3))
+    # Shaded colors: Medium turquoise for Male, plum for Female
+    colors = ['mediumturquoise', 'plum']  # Adjust the color scheme for Male and Female
+    bars = ax.barh(gender_counts.index, gender_counts.values, color=colors, height=0.4)
+    # Add percentage labels with dynamic positioning
+    total_count = gender_counts.sum()
+    for bar in bars:
+        # Get the width of the bar (since it's horizontal, width is along x-axis)
+        width = bar.get_width()
+        percentage = (width / total_count) * 100
+        # Position the text based on the percentage
+        if percentage > 50:  # For high percentages, place inside the bar
+            ax.text(width / 2, bar.get_y() + bar.get_height() / 2,
+                    f'{percentage:.1f}%', ha='center', va='center',
+                    fontsize=12, color='darkgreen', fontweight='bold')
+        else:  # For low percentages, place outside the bar
+            ax.text(width + 5, bar.get_y() + bar.get_height() / 2,
+                    f'{percentage:.1f}%', ha='left', va='center',
+                    fontsize=12, color='brown', fontweight='bold')
+    # Add a title and labels
+    ax.set_xlabel("Count", fontsize=14, fontweight='bold')
+    ax.set_ylabel("Gender", fontsize=14, fontweight='bold')
+    ax.set_title(f"Gender Distribution in {df_selected_tz.iloc[1, 12]} for {selected_week}", fontsize=16, fontweight='bold')
+    # Add gridlines for style
+    ax.set_facecolor('ghostwhite')
+    ax.grid(True, axis='x', linestyle='--', alpha=0.6)
+    # Display the plot
+    plt.tight_layout()
+    return plt
 
 
 
@@ -167,109 +198,220 @@ def most_played(df_selected_week):
     return mps
 
 ####### Duration
-
 def hours_listened(df_selected_week):
-    odur=df_selected_week.groupby('state')['duration'].sum()/60
-    odur=odur.round().sort_values(ascending=False)
-    odur=odur.reset_index(drop=False)
-    odur_final=odur.drop(odur[odur['duration'] == 0].index)
-### Finding middle section to highlight
-    index_third=odur.iloc[0,1]//3
-    topnum=odur.iloc[0,1]-index_third
-    bottomnum=odur_final.iloc[-1,1]+index_third
-    y_av=np.mean(odur_final['duration'])
-    odur_final.plot.bar('state','duration')
-    plt.axhspan(topnum, bottomnum, color='red', alpha=0.2)
-    # plt.title(f"Duration in Hours per User in {df_selected_tz.iloc[1,12]} in {selected_week}")
-    plt.axhline(y=y_av, color='r', linestyle='--', label='Average')
-    st.pyplot(plt)
+    total_dur=df_selected_week.groupby('userId')['duration'].sum().sort_values(ascending=False)
+#### now we find the outliers with IQR Method
+    q1 = total_dur.quantile(0.25)
+    q3 = total_dur.quantile(0.75)
+    IQR = q3 - q1
+    no_outliers = total_dur[(q1 - 1.5*IQR < total_dur) &  (total_dur < q3 + 1.5*IQR)]
+#### Turn Seires into DF for better graphin
+    df_no_outliers=pd.DataFrame(no_outliers)
+    df_no_outliers=df_no_outliers.reset_index(drop=False)
+###### Filter with new DF to have refined and unrefied.
+####### Refined
+    dur_refined_sum=df_no_outliers['duration'].sum()
+    dur_reuni=df_no_outliers['userId'].nunique()
+    dur_refined_av=dur_refined_sum/dur_reuni
+    dur_refined_av=dur_refined_av.round(2)
+####### Unrefined
+    dur_unrefined=df_selected_week['duration'].sum()
+    dur_unrefined_uni=df_selected_week['userId'].nunique()
+    dur_unrefined=dur_unrefined/dur_unrefined_uni
+    dur_unrefined=dur_unrefined.round(2)
+######### Concat both DFs to make a nicer chart. If this doesn't work for final graph, you can silence this and
+######### just use the df names in the brackets [ ] and call them individually instead.
+    final_dur=pd.DataFrame({'Unrefined Duration': [dur_unrefined], 'Refined Duration': [dur_refined_av]})
+################# Graph
+    ax = final_dur.plot(kind='bar',stacked=True)
+    ax.set_xlabel("Time Zone")
+    ax.set_ylabel("Durations")
+    # ax.set_title(f"in {df_selected_tz.iloc[1,12]} in {selected_week}")
+    plt.legend(title="Levels")
+    st.plylot(plt)
+    return
 
-####### Artist
+
+
+#     odur=df_selected_week.groupby('userId')['duration'].sum()/60
+#     odur=odur.round().sort_values(ascending=False)
+#     odur_final=odur.reset_index(drop=True)
+#     # odur_final=odur.drop(odur[odur['duration'] == 0].index)
+    
+
+#     total_dur=df_selected_week.groupby('userId')['duration'].sum().sort_values(ascending=False)
+# ##### Find Outliers
+#     q1 = total_dur.quantile(0.25)
+#     q3 = total_dur.quantile(0.75)
+#     IQR = q3 - q1
+#     no_outliers = total_dur[(q1 - 1.5*IQR < total_dur) &  (total_dur < q3 + 1.5*IQR)]
+# #### Turn Seires into DF
+#     df_no_outliers=pd.DataFrame(no_outliers)
+#     df_no_outliers=df_no_outliers.reset_index(drop=False)
+# ###### Filter with new DF to have refined and unrefied.
+# ####### Refined
+#     dur_refined_sum=df_no_outliers['duration'].sum()
+#     dur_reuni=df_no_outliers['userId'].nunique()
+#     dur_refined_av=dur_refined_sum/dur_reuni
+#     dur_refined_av=dur_refined_av.round(2)
+#     dur_refined_av=dur_refined_av.reset_index(drop=True)
+#     y=odur
+#     x1=odur_final
+#     x2=dur_refined_av
+# #### stacked area chart.
+#     plt.stackplot(y,x1,x2, labels=['A','B','c'])
+#     plt.legend(loc='upper left')
+#     plt.show()
+
+
+####### Artist # GABI
 def most_played_artist(df_selected_week):
     mpa=df_selected_week['artist'].value_counts()
 # WordCloud 
-    wc = WordCloud(background_color='black', colormap='winter', width=800, height=400).generate_from_frequencies(mpa)
+    wc = WordCloud(background_color='black', colormap='spring', width=800, height=400).generate_from_frequencies(mpa)
     plt.figure(figsize=(10, 7))
     plt.imshow(wc, interpolation='bilinear')
     plt.axis("off")
     st.pyplot(plt)
 
+#### Top User  ENDA
+def leader_board(df_selected_week):
+    top_boi=df_selected_week.groupby('userId')['duration']
+    top_boi=top_boi.sum().sort_values(ascending=False)
+    top_boi=top_boi//60
+    top_boi=top_boi.reset_index(drop=False)
+    top_boi=top_boi.head(3)
+    best_bois=top_boi['userId'].head(3)
+    best_bois=best_bois.reset_index(drop=False)
+    last_boi=[]
+    for i in best_bois['userId']:
+        big_boi_name=df_selected_week['firstName'].loc[df_selected_week['userId']==i].head(1)
+        big_boi_state=df_selected_week['state'].loc[df_selected_week['userId']==i].head(1)
+        big_boi_listen=top_boi['duration'].loc[top_boi['userId']==i]
+        lb_boi=pd.DataFrame({'User Id': [i], 'Name': [big_boi_name.iloc[0]], 'State': [big_boi_state.iloc[0]], 'Hours': [big_boi_listen.iloc[0]]})
+        last_boi.append(lb_boi)
+    boss_boi = pd.concat(last_boi, ignore_index=True)
+    return boss_boi
+    
 
+##################################################### Format top text report ENDA
+def text_report(df_selected_week):
+    label_tz = ", ".join(df_selected_week['time_zone'].unique())
+    label_wk = ", ".join(df_selected_week['week'].unique())
+    if sb_wk == present:
+        week_frag = "ZipSpontify is currently being"
+        is_was="is"
+    else:
+        week_frag = f"during {label_wk} ZipSpontify was"
+        is_was="was"
+    if sb_tz == allPlaces:
+        place_frag= f"In all time zones"
+    elif len(sb_tz)==1:
+        place_frag=f"For time zone {label_tz}"
+    else:
+        place_frag=f"For time zones {label_tz}"
+    
+    u_unique=df_selected_week['userId'].nunique()
+    topSong=df_selected_week['song'].value_counts().head(1)
+    topSong=topSong.to_string()
+    durry=df_selected_week['duration'].sum()//60
+    durry=durry.round()
+    st.markdown(f"{place_frag} {week_frag} acessed by {u_unique} unique users. Their combined listening duration {is_was} {durry} hours")
+################################################################################
+#####################################################  Dashboard Main Panel
+############################################################################
+text_report(df_selected_week)
+col = st.columns((2, 5, 2), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
 
-#######################
-# Dashboard Main Panel
-#######################
-col = st.columns((2.5, 5, 2.5), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
-
-#1st Column - Plan level and Device Type
+#####################################1st Column - Plan level and Device Type
 with col[0]:
-    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/Media/logonobglittle.png")
-####PLAN LEVEL
+    with st.container(height=350,border=True):
+##################################   PLAN LEVEL
 
-    st.markdown('#### Account Levels')
-    level_chart = paid_level(df_selected_week)
+        # st.markdown('### Account Levels')
+        level_chart = paid_level(df_selected_week)
 
-    if level_chart:
-        st.pyplot(level_chart, use_container_width=True)
+        if level_chart:
+            st.pyplot(level_chart, use_container_width=True)
 
 
-####DEVICES
-
-    st.markdown('## Platforms')
-    donut = most_used_platform(df_selected_week)
-    st.plotly_chart(donut, use_container_width=True)
+######################################### DEVICES
+    with st.container(height=350,border=True):
+        # st.markdown('## Platforms')
+        donut = most_used_platform(df_selected_week)
+        st.plotly_chart(donut, use_container_width=True)
 
 #2nd Column - User Map, Gender and Summary Table
-
+###########################################################################
 with col[1]:
+##########################################################################
+##################################################### USER MAP
+    with st.container(height=400,border=True):
+        # st.markdown('### User Count per State')
+        get_state_count = get_state_count(df_selected_week)
 
-####USER MAP
-    st.markdown('### User Count per State')
-    get_state_count = get_state_count(df_selected_week)
+        if get_state_count:
+            st.plotly_chart(get_state_count)
+##################################################### WORD COUNT
 
-    if get_state_count:
-        st.plotly_chart(get_state_count, use_container_width=True)
-####GENDER
-    st.markdown('### Gender Distribution')
-    gender_chart = get_gender(df_selected_week)
-
-    if gender_chart:
-        st.pyplot(gender_chart)
-
-####SUMMARY TABLE
-
-
-
-    
-#3rd Column - Top 10 Songs, Duration and Artists
-with col[2]:
-
-####TOP SONGS
-    st.markdown('#### Most Played Songs (Top 5)')
-    most_played_songs = most_played(df_selected_week)
-
-    if most_played_songs is not None:
-        st.markdown(most_played_songs.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-        # st.table(most_played_songs.reset_index(drop=True))
-
-####DURATION
-    st.markdown('#### Hours Listening')
-    hours_listened = hours_listened(df_selected_week)
-
-    if hours_listened is not None:
-        st.table(hours_listened)
-
-####TOP ARTISTS
-    st.markdown('#### Top Artists')
+    # st.markdown('#### Top Artists')
     wordcloud_chart = most_played_artist(df_selected_week)
     if wordcloud_chart:
         st.pyplot(plt)
+    # st.markdown('### Gender Distribution')
+    # gender_chart = get_gender(df_selected_week)
+
+    # if gender_chart:
+    #     st.pyplot(gender_chart)
+    with st.expander('Artist Play Counts',expanded=False):
+        mpa=df_selected_week['artist'].value_counts().head(10)
+        st.dataframe(mpa, width=300)
+######################################################### SUMMARY TABLE
+
+##### (TBA)
+
+##########################################################################    
+#3rd Column - Top 10 Songs, Duration and Artists
+##########################################################################
+with col[2]:
+
+##################################################### TOP SONGS
+    st.markdown('#### Most Played Songs')
+    most_played_songs = most_played(df_selected_week)
+
+    if most_played_songs is not None:
+        st.dataframe(most_played_songs.set_index(most_played_songs.columns[0]), width=300)
+        
+
+
+##################################################### Leader Board
+    st.markdown('#### Top Users')
+    leader_board = leader_board(df_selected_week)
+
+    if leader_board is not None:
+        st.dataframe(leader_board.set_index(leader_board.columns[0]), width=300)
+
+##################################################### DURATION
+## (Broken, Commented out for now)
+    # st.markdown('#### Hours Listening')
+    # hours_listened = hours_listened(df_selected_week)
+
+    # if hours_listened is not None:
+    #     st.pyplot(plt)
+
+##################################################### GENDER
+## (Broken, Commented out for now )
+    # get_gen=get_gender_shaded_horizontal(df_selected_week)
+
+    # if get_gen is not None:
+    #     st.table(get_gen)
     
-    
-    
-#  with st.expander('About', expanded=True):
+# with st.expander('Simple Report', expanded=True):
 #     st.write('''
-#             - Data: [U.S. Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2010s-state-total.html).
-#             - :orange[**Gains/Losses**]: states with high inbound/ outbound migration for selected year
-#             - :orange[**States Migration**]: percentage of states with annual inbound/ outbound migration > 50,000
-#             ''')
+#             -Top Ten Artist:
+#             -Top Ten Songs:
+#             -State with Most Users:
+#             -State with Least Users:
+#             -Paid Users:
+#             -Free Users:
+#             -''' )   

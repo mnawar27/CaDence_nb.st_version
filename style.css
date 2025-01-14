@@ -7,7 +7,11 @@
 
 [data-testid="stAppViewContainer"]{
     /* background: #04042c; */
-    background-color: black;
+    /* background-color: white; */
+    /* background: rgb(66,66,142);
+    background: linear-gradient(180deg, rgba(66,66,142,1) 75%, rgba(122,87,154,1) 100%); */
+    background: rgb(0,0,0);
+    background: linear-gradient(180deg, rgba(0,0,0,1) 75%, rgba(65,0,124,1) 100%);
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -39,7 +43,7 @@ html, body, [class*="css"]{
 [data-testid="stImageContainer"]{
     /* background-color: aqua; */
     margin:auto;
-    padding: 5px 5px 5px 5px;
+    /* padding: 5px 5px 5px 5px; */
     border-radius:15px;
     border:3px dotted rgb(251, 251, 251,.5);
 }
@@ -53,11 +57,11 @@ html, body, [class*="css"]{
     margin-bottom: -8rem; */
 
 [data-testid="stSidebarUserContent"]{
-    background: #04042c;
+    background: black;
     }
 
 [data-testid="stSidebar"] {
-    background: #04042c;
+    background: black;
     width: 100px;
 }
 /* [data-testid="stVerticalBlock"] {
@@ -68,7 +72,13 @@ html, body, [class*="css"]{
     /* background-color:rgb(17, 14, 18); */
     background-color:black;
     border-radius:15px;
+    box-shadow: 10px 10px 20px rgb(32, 2, 36);
     margin:auto;
+    text-align: center;
+}
+[data-testid="stFullScreenFrame"]{
+    /* padding:10px; */
+    margin:align;
     text-align: center;
 }
 th, td {
@@ -78,6 +88,9 @@ th, td {
     
     text-align: center;
     margin:auto;
+}
+[data-testid="stDataFrame"]{
+    text-align: center;
 }
 /* [data-testid="stMarkdown"] {
     font-family:'Anta', serif;
