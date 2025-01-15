@@ -94,12 +94,14 @@ def paid_level(df_selected_week):
     label_wk = ", ".join(df_selected_week['week'].unique())
 
     ## Horizontal bar chart.  
-    fig, ax = plt.subplots(figsize=(4, 8))
+    fig, ax = plt.subplots(figsize=(1,2))
     paidlev.plot(kind='bar',stacked=True,color=['#dc14c5', '#20b85f'], ax=ax)
-    ax.set_title("Paid vs Free Accounts",fontsize=30)
-    ax.set_xticklabels(paidlev['level'], rotation=0, ha='right')
+    ax.set_title("Paid vs Free Accounts",fontsize=20,pad=20)
+    ax.set_xticklabels(paidlev['level'],rotation=0, ha='right')
     y=paidlev['count'].nlargest(1)
-    ax.set_yticks(np.arange(0, max(y) + 10, 10))
+    ax.set_yticks(np.arange(0, max(y) + 100, 100))
+    ax.set_xticklabels(['Free','Paid'])
+    ax.legend().remove()
     return fig
 
 ####### Devices  GABI
@@ -114,7 +116,7 @@ def most_used_platform(df_selected_week):
                                     'iPhone':'#3c34bc',
                                     'iPad':'#1eb75c'})
     fig.update_traces(textinfo='percent+label')
-    fig.update_layout(showlegend=False, font_size=15, height=350,title=dict(text="Platforms Used", x=0.3,font=dict(size=20)))
+    fig.update_layout(showlegend=False, font_size=15, height=380,width=100,title=dict(text="Platforms Used", x=0.3,font=dict(size=20)))
     return fig
 
 #2nd Column - - User Map, Gender and Summary Table
@@ -191,7 +193,7 @@ def get_gender_shaded_horizontal(df_selected_week):
 
 ####### Song
 def most_played(df_selected_week):
-    mps=df_selected_week['song'].value_counts().nlargest(5).reset_index()
+    mps=df_selected_week['song'].value_counts().nlargest(10).reset_index()
     mps.columns = ['Song', 'Plays']  
     mps['Rank'] = mps.index + 1  
     mps = mps[['Rank', 'Song', 'Plays']]
@@ -269,7 +271,7 @@ def most_played_artist(df_selected_week):
     mpa=df_selected_week['artist'].value_counts()
 # WordCloud 
     wc = WordCloud(background_color='black', colormap='spring', width=800, height=400).generate_from_frequencies(mpa)
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(10, 6))
     plt.imshow(wc, interpolation='bilinear')
     plt.axis("off")
     st.pyplot(plt)
@@ -280,8 +282,8 @@ def leader_board(df_selected_week):
     top_boi=top_boi.sum().sort_values(ascending=False)
     top_boi=top_boi//60
     top_boi=top_boi.reset_index(drop=False)
-    top_boi=top_boi.head(3)
-    best_bois=top_boi['userId'].head(3)
+    top_boi=top_boi.head(6)
+    best_bois=top_boi['userId'].head(6)
     best_bois=best_bois.reset_index(drop=False)
     last_boi=[]
     for i in best_bois['userId']:
@@ -321,11 +323,11 @@ def text_report(df_selected_week):
 #####################################################  Dashboard Main Panel
 ############################################################################
 text_report(df_selected_week)
-col = st.columns((2, 5, 2), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
+col = st.columns((3, 5, 2), gap='medium') #Divide the dashboard into 3 columns - inside the () are display the relative size of the columns (portion)
 
 #####################################1st Column - Plan level and Device Type
 with col[0]:
-    with st.container(height=350,border=True):
+    with st.container(height=420,border=True):
 ##################################   PLAN LEVEL
 
         # st.markdown('### Account Levels')
@@ -336,7 +338,7 @@ with col[0]:
 
 
 ######################################### DEVICES
-    with st.container(height=350,border=True):
+    with st.container(height=420,border=True):
         # st.markdown('## Platforms')
         donut = most_used_platform(df_selected_week)
         st.plotly_chart(donut, use_container_width=True)
@@ -364,8 +366,14 @@ with col[1]:
     # if gender_chart:
     #     st.pyplot(gender_chart)
     with st.expander('Artist Play Counts',expanded=False):
-        mpa=df_selected_week['artist'].value_counts().head(10)
-        st.dataframe(mpa, width=300)
+        mpa=df_selected_week['artist'].value_counts()
+        mpa=mpa.sort_values(ascending=False).reset_index(drop=False)
+
+        # for i in mpa['artist']:
+        #     totdur=df_selected_week['duration'].loc[df_selected_week==i]
+        #     totdur=totdur.sum().reset_index(drop=True)
+
+        st.dataframe(mpa.set_index(mpa.columns[0]),use_container_width=True)
 ######################################################### SUMMARY TABLE
 
 ##### (TBA)
