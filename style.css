@@ -82,7 +82,8 @@ html, body, [class*="css"]{
     text-align: center;
 }
 th, td {
-    border:10px solid rgb(171, 48, 48);
+    border:10px solid #fb449a;
+    border:10px solid #0035a7
 }
 [data-testid="stMarkdownContainer"]{
     
