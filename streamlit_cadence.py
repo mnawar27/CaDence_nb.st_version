@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import wordcloud
 from wordcloud import WordCloud
+import plotly.graph_objects as go
 import numpy as np
 
 plt.style.use('dark_background')
@@ -67,20 +68,44 @@ with st.sidebar:
 ###################################################
 # Plots
 ################################################### PAID LEVEL
+    def paid_level(df_selected_week):
+        paidlev=df_selected_week.drop_duplicates(subset=['userId'])
+        paidlev=paidlev.groupby('week')['level'].value_counts()
+        paidlev=paidlev.reset_index()
+        paidlev.columns = ['Week', 'Level', 'Count']
+  #######
+        height=paidlev['Count']
+        plt.figure(facecolor="black")
+        b_colors={'paid':'#00d732','free':'#0073d7'}
+        colors=[b_colors[i] for i in paidlev['Level']]
+        plt.bar (paidlev['Week'],height,color=colors,width=0.5)
+        ax = plt.gca()  
+        ax.set_facecolor("black")
+        ax.spines['bottom'].set_color('#fbfbfb80')
+        ax.spines['left'].set_color('#fbfbfb80')
+        ax.xaxis.label.set_color('#fbfbfb80')
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        ax.set_title("Paid vs Free Accounts", fontsize=20, pad=20,color='white')
+        pink_patch = mpatches.Patch(color='#00d732', label='Paid')
+        blue_patch = mpatches.Patch(color='#0073d7', label='Free')
+        plt.legend(handles=[blue_patch,pink_patch])  
+        return plt
 
-def paid_level(df_selected_week):
-    paidlev = df_selected_week.groupby('userId')['level'].first().value_counts()
-    paidlev=paidlev.reset_index(drop=False)
-    ## Horizontal bar chart.  
-    fig, ax = plt.subplots(figsize=(1,2))
-    paidlev.plot(kind='bar',stacked=True,color=['#dc14c5', '#20b85f'], ax=ax)
-    ax.set_title("Paid vs Free Accounts",fontsize=20,pad=20)
-    ax.set_xticklabels(paidlev['level'],rotation=0, ha='right')
-    y=paidlev['count'].nlargest(1)
-    ax.set_yticks(np.arange(0, max(y) + 100, 100))
-    ax.set_xticklabels(['Free','Paid'])
-    ax.legend().remove()
-    return fig
+
+# def paid_level(df_selected_week):
+#     paidlev = df_selected_week.groupby('userId')['level'].first().value_counts()
+#     paidlev=paidlev.reset_index(drop=False)
+#     ## Horizontal bar chart.  
+#     fig, ax = plt.subplots(figsize=(1,2))
+#     paidlev.plot(kind='bar',stacked=True,color=['#dc14c5', '#20b85f'], ax=ax)
+#     ax.set_title("Paid vs Free Accounts",fontsize=20,pad=20)
+#     ax.set_xticklabels(paidlev['level'],rotation=0, ha='right')
+#     y=paidlev['count'].nlargest(1)
+#     ax.set_yticks(np.arange(0, max(y) + 100, 100))
+#     ax.set_xticklabels(['Free','Paid'])
+#     ax.legend().remove()
+#     return fig
 
 ################################################### DEVICES 
 
@@ -124,9 +149,9 @@ def get_state_count(omega_raw, time_zone='All', week='All'):
 
 def get_gender(df_selected_week):
     ###### Step one: drop dups since we only want to count users once
-    gender_df = df_selected_week.drop_duplicates(subset='userId',inplace=True)
+    gender_df = df_selected_week.drop_duplicates(subset=['userId'])
     ###### Step two: Now that userId is taken care of, we can agg between just week and gender
-    gender_df = df_selected_week.groupby(by='week')['gender'].value_counts()
+    gender_df = gender_df.groupby('week')['gender'].value_counts()
     gender_df=gender_df.reset_index()
     ###### Chart starts now
     height=gender_df['count']
