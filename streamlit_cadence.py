@@ -111,6 +111,11 @@ with st.sidebar:
 
 def most_used_platform(df_selected_week):
     platform=df_selected_week.groupby('userId')['userAgent'].first().value_counts()
+    # label_tz = ", ".join(df_selected_week['time_zone'].unique())
+    if sb_tz==allPlaces:
+        label_tz="All Time Zones"
+    else:
+        label_tz=sb_tz
     ##Donut Chart
     fig = px.pie(platform, names=platform.index,values=platform, hole=.6,color='count',
                 color_discrete_map={'Windows':'#dc14c5',
@@ -119,7 +124,7 @@ def most_used_platform(df_selected_week):
                                     'iPhone':'#3c34bc',
                                     'iPad':'#1eb75c'})
     fig.update_traces(textinfo='percent+label')
-    fig.update_layout(showlegend=False, font_size=15, height=380,width=100,title=dict(text="Devices Used", x=0.3,font=dict(size=20)))
+    fig.update_layout(showlegend=False, font_size=15, height=380,width=100,title=dict(text=f"Devices Used in {label_tz}",font=dict(size=20)))
     return fig
 
 ################################################### USER COUNT MAP
@@ -162,11 +167,7 @@ def get_gender(df_selected_week):
     if sb_tz==allPlaces:
         t_tz="all Time Zones"
     else:t_tz=sb_tz
-    t_wk=sb_wk
-    if sb_wk==present:
-        t_wk="the Present"
-    else:t_wk=sb_wk
-    plt.title(f"Gender Counts in {t_tz} during {t_wk}.")
+    plt.title(f"Gender Counts in {t_tz}")
     # plt.figure(figsize=(4,6)) 
     ax = plt.gca()  
     ax.set_facecolor("black")
@@ -222,6 +223,36 @@ def most_played_artist(df_selected_week):
     plt.imshow(wc, interpolation='bilinear')
     plt.axis("off")
     st.pyplot(plt)
+################################################### DURATION
+
+def duration(df_selected_week):
+    if sb_tz==allPlaces:
+        label_tz="All Time Zones"
+    else:
+        label_tz=sb_tz
+    end=[]
+    chart_y=[]
+    for i in sb_wk:
+        chart_y.append(i)
+        total_dur=df_selected_week.loc[df_selected_week['week'] == i]
+        total_dur=total_dur.groupby('userId')['duration'].sum().sort_values(ascending=False)
+        total_dur=total_dur.reset_index(drop=False)
+        total_dur=total_dur['duration']//60
+        total_dur=total_dur[total_dur!=0]
+        end.append(total_dur)
+        
+    fig=plt.figure(figsize=(5,4))
+    fig.set_facecolor("black")
+    dur=plt.boxplot(end,notch=True,patch_artist=True)
+    labels = chart_y
+    plt.xticks(np.arange(1, len(end) + 1), labels)
+    colors = ['#fb449a', '#0035a7', '#fdbd0c', '#00d732', '#0073d7','#8600a7']
+    for patch, color in zip(dur['boxes'], colors):
+        patch.set_facecolor(color)
+    for median in dur['medians']:
+        median.set_color('white')
+    plt.title(f"Duration in Hours in {label_tz}")
+    return plt
 
 #################################################### TOP USERS
 
@@ -254,6 +285,8 @@ def text_report(df_selected_week):
     else:
         week_frag = f"during {label_wk} ZipSpontify was"
         is_was="was"
+    if sb_wk == ['Week 1','Week 2','Week 3','Week 4','Week 5','Present']:
+        week_frag= "during the entire six week campaign, ZipSpontify was"
     if sb_tz == allPlaces:
         place_frag= f"In all time zones"
     elif len(sb_tz)==1:
@@ -281,17 +314,26 @@ with col[0]:
 ###################################################  
 ##################################   PLAN LEVEL
 
-    with st.container(height=420,border=True):
+    with st.expander(r"$\textsf{\Large Paid vs Free}$",expanded=False):
         level_chart = paid_level(df_selected_week)
-
         if level_chart:
-            st.pyplot(level_chart, use_container_width=True)
+            st.pyplot(level_chart)
+    
+        paidlev=df_selected_week.drop_duplicates(subset=['userId'])
+        paidlev=paidlev.groupby('week')['level'].value_counts()
+        paidlev=paidlev.reset_index()
+        paidlev.columns = ['Week', 'Level', 'Count']
+        st.dataframe(paidlev.set_index(paidlev.columns[0]))
+            
 
 ######################################### DEVICES
 
     with st.container(height=420,border=True):
         donut = most_used_platform(df_selected_week)
         st.plotly_chart(donut, use_container_width=True)
+
+    duration=duration(df_selected_week)
+    st.pyplot(plt)
 
 #2nd Column - USER MAP, TOP ARTIST
 ###########################################################################
@@ -310,15 +352,20 @@ with col[1]:
     wordcloud_chart = most_played_artist(df_selected_week)
     if wordcloud_chart:
         st.pyplot(plt)
-    with st.expander('Artist Play Counts',expanded=False):
+    with st.expander(r"$\textsf{\Large Artist Play Counts}$",expanded=False):
         mpa=df_selected_week['artist'].value_counts()
         mpa=mpa.sort_values(ascending=False).reset_index(drop=False)
         st.dataframe(mpa.set_index(mpa.columns[0]),use_container_width=True)
 
 ######################################################### GENDER
-    with st.expander('Gender Counts',expanded=False):
+    with st.expander(r"$\textsf{\Large Gender Counts}$",expanded=False):
         gender_chart = get_gender(df_selected_week)
         st.pyplot(gender_chart)
+        gender_dfsum = df_selected_week.drop_duplicates(subset=['userId'])
+    ###### Step two: Now that userId is taken care of, we can agg between just week and gender
+        gender_dfsum = gender_dfsum.groupby('week')['gender'].value_counts()
+        gender_dfsum=gender_dfsum.reset_index()
+        st.dataframe(gender_dfsum.set_index(gender_dfsum.columns[0]),use_container_width=True)
 ##### (TBA)
 
 ##########################################################################    
@@ -341,4 +388,8 @@ with col[2]:
     if leader_board is not None:
         st.dataframe(leader_board.set_index(leader_board.columns[0]), width=300)
 
-
+# st.markdown('#### Unfiltered Top Stats by Time Zone for all Six Weeks')
+# col = st.columns((2, 2, 2, 2, 2), gap='medium')
+# with col[0]:
+#     with st.expander("East Coast Favorites",expander=False):
+        

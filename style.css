@@ -89,6 +89,9 @@ th, td {
     border:10px solid #0073d7;
     border:10px solid #8600a7
 }
+/* div[data-testid="stExpander"] div[role="button"] p {
+    font-size: 20px;
+} */
 .stPlotlyChart {
     height: 90vh !important;
 }
