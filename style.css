@@ -84,7 +84,10 @@ html, body, [class*="css"]{
 th, td {
     border:10px solid #fb449a;
     border:10px solid #0035a7;
-    border:10px solid #fdbd0c
+    border:10px solid #fdbd0c;
+    border:10px solid #00d732;
+    border:10px solid #0073d7;
+    border:10px solid #8600a7
 }
 .stPlotlyChart {
     height: 90vh !important;
