@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 import plotly.express as px
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import wordcloud
 from wordcloud import WordCloud
 import numpy as np
@@ -121,28 +122,62 @@ def get_state_count(omega_raw, time_zone='All', week='All'):
 
 ################################################### GENDER
 
-def get_gender_shaded_horizontal(df_selected_week):
+def get_gender(df_selected_week):
+    ###### Step one: drop dups since we only want to count users once
+    gender_df = df_selected_week.drop_duplicates(subset='userId',inplace=True)
+    ###### Step two: Now that userId is taken care of, we can agg between just week and gender
+    gender_df = df_selected_week.groupby(by='week')['gender'].value_counts()
+    gender_df=gender_df.reset_index()
+    ###### Chart starts now
+    height=gender_df['count']
+    plt.figure(facecolor="black")
+    b_colors={'M':'#0035a7','F':'#fb449a','Other':'#fdbd0c'}
+    colors=[b_colors[i] for i in gender_df['gender']]
+    plt.bar (gender_df['week'],height,color=colors,width=0.5)
+    if sb_tz==allPlaces:
+        t_tz="all Time Zones"
+    else:t_tz=sb_tz
+    t_wk=sb_wk
+    if sb_wk==present:
+        t_wk="the Present"
+    else:t_wk=sb_wk
+    plt.title(f"Gender Counts in {t_tz} during {t_wk}.")
+    # plt.figure(figsize=(4,6)) 
+    ax = plt.gca()  
+    ax.set_facecolor("black")
+    ax.spines['bottom'].set_color('#fbfbfb80')
+    ax.spines['left'].set_color('#fbfbfb80')
+    ax.xaxis.label.set_color('#fbfbfb80')
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    pink_patch = mpatches.Patch(color='#fb449a', label='Female')
+    blue_patch = mpatches.Patch(color='#0035a7', label='Male')
+    yellow_patch = mpatches.Patch(color='#fdbd0c', label='Other')
+    plt.legend(handles=[blue_patch,pink_patch,yellow_patch])
+    return plt
 
-    gender_counts = df_selected_week.groupby('userId')['gender'].first().value_counts()
-    gender_counts.index = gender_counts.index.map({'M': 'Male', 'F': 'Female'})
+# def get_gender_shaded_horizontal(df_selected_week):
 
-    fig, ax = plt.subplots(figsize=(1, 1))
-    colors = ['#0035a7','#fb449a']
-    bars = ax.barh(gender_counts.index, gender_counts.values, color=colors)
+#     gender_counts = df_selected_week.groupby('userId')['gender'].first().value_counts()
+#     gender_counts.index = gender_counts.index.map({'M': 'Male', 'F': 'Female'})
 
-    total_count = gender_counts.sum()
-    for bar in bars:
-        width = bar.get_width()
-        percentage = (width / total_count) * 100
-        text_position = width - 10 if percentage > 50 else width + 5
-        text_color = 'white'
-        ax.text(text_position, bar.get_y() + bar.get_height() / 2,
-                f'{percentage:.1f}%', ha='right' if percentage > 50 else 'left',
-                va='center', color=text_color)
+#     fig, ax = plt.subplots(figsize=(1, 1))
+#     colors = ['#0035a7','#fb449a']
+#     bars = ax.barh(gender_counts.index, gender_counts.values, color=colors)
 
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    return fig
+#     total_count = gender_counts.sum()
+#     for bar in bars:
+#         width = bar.get_width()
+#         percentage = (width / total_count) * 100
+#         text_position = width - 10 if percentage > 50 else width + 5
+#         text_color = 'white'
+#         ax.text(text_position, bar.get_y() + bar.get_height() / 2,
+#                 f'{percentage:.1f}%', ha='right' if percentage > 50 else 'left',
+#                 va='center', color=text_color)
+
+#     ax.set_xlabel("")
+#     ax.set_ylabel("")
+#     return fig
 
 ################################################### TOP SONGS
 
@@ -256,9 +291,9 @@ with col[1]:
         st.dataframe(mpa.set_index(mpa.columns[0]),use_container_width=True)
 
 ######################################################### GENDER
-    # with st.container(height=350,border=True):
-    #         gender_chart = get_gender_shaded_horizontal(df_selected_week)
-    #         st.pyplot(gender_chart, use_container_width=True)
+    with st.expander('Gender Counts',expanded=False):
+        gender_chart = get_gender(df_selected_week)
+        st.pyplot(gender_chart)
 ##### (TBA)
 
 ##########################################################################    
@@ -280,3 +315,5 @@ with col[2]:
 
     if leader_board is not None:
         st.dataframe(leader_board.set_index(leader_board.columns[0]), width=300)
+
+

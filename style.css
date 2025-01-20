@@ -45,7 +45,7 @@ html, body, [class*="css"]{
     margin:auto;
     /* padding: 5px 5px 5px 5px; */
     border-radius:15px;
-    border:3px dotted rgb(251, 251, 251,.5);
+    border:3px dotted #fbfbfb80;
 }
 /* #### Run header */
 /* [data-testid="block-container"] {
@@ -83,7 +83,11 @@ html, body, [class*="css"]{
 }
 th, td {
     border:10px solid #fb449a;
-    border:10px solid #0035a7
+    border:10px solid #0035a7;
+    border:10px solid #fdbd0c
+}
+.stPlotlyChart {
+    height: 90vh !important;
 }
 [data-testid="stMarkdownContainer"]{
     
