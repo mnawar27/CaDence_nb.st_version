@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+import plotly.graph_objects as go
 import plotly.express as px
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import wordcloud
 from wordcloud import WordCloud
-import plotly.graph_objects as go
+
 import numpy as np
 
 plt.style.use('dark_background')
@@ -26,7 +27,7 @@ omega_raw = pd.read_json('data/omega_raw.json', lines=True)
 ################################################### SIDEBAR FILTER LOGIC
 
 with st.sidebar:
-    st.image("/Users/efigueroa/Desktop/CaDence_nb.st_version/Media/logonobglittle.png")
+    st.image("/CaDence_nb.st_version/tree/main/Media/logonobglittle.png")
     st.header('Time Zone and Week Controls')
     ##### Defaults Below
     present=['Present']
