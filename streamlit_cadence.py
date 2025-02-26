@@ -27,7 +27,7 @@ omega_raw = pd.read_json('data/omega_raw.json', lines=True)
 ################################################### SIDEBAR FILTER LOGIC
 
 with st.sidebar:
-    st.image("/CaDence_nb.st_version/tree/main/Media/logonobglittle.png")
+    st.image("/Users/mnawar/Desktop/passion/finalfinal/CaDence_nb.st_version/CaDence.png")
     st.header('Time Zone and Week Controls')
     ##### Defaults Below
     present=['Present']
